@@ -5,6 +5,8 @@
 
 DOOM port for Project Lighthouse.
 
+![Screencast](screencast.gif)
+
 ## Building
 
 To build the project, run
