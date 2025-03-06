@@ -47,10 +47,10 @@ async fn main() -> Result<()> {
     let updater_handle = task::spawn(updater::run(lh, updater_rx));
     let controller_handle = task::spawn(controller::run(input, controller_tx));
 
-    thread::spawn(move || {
-        info!("Running doom...");
+    thread::Builder::new().name("DOOM".into()).spawn(move || {
+        info!("Running DOOM...");
         doom.run();
-    });
+    })?;
 
     updater_handle.await??;
     controller_handle.await??;
