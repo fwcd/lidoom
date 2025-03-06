@@ -1,5 +1,10 @@
 .DS_Store
 .vscode
+
+# DOOM
+.savegame
 *.wad
 *.WAD
+
+# Cargo
 /target
