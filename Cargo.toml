@@ -7,3 +7,4 @@ license = "GPL-2.0"
 repository = "https://github.com/fwcd/lidoom"
 
 [dependencies]
+doomgeneric = { git = "https://github.com/fwcd/doomgeneric-rs.git", rev = "545a6124a2690f03ac9200abb7b2afd404722696" }
