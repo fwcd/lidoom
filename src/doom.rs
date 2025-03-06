@@ -34,6 +34,8 @@ impl DoomGeneric for LighthouseDoom {
         assert!(xres == DOOM_WIDTH);
         assert!(yres == DOOM_HEIGHT);
 
+        info!("Drawing frame");
+
         // Send frame to GUI
         let mut screen_frame = vec![0u8; 3 * DOOM_WIDTH * DOOM_HEIGHT];
         for y in 0..DOOM_HEIGHT {
@@ -46,7 +48,6 @@ impl DoomGeneric for LighthouseDoom {
                 screen_frame[rgb_idx + 2] = (pixel & 0xFF) as u8; // blue
             }
         }
-        println!("Sending frame");
         self.gui_tx.blocking_send(GUIMessage::Frame(screen_frame)).unwrap();
 
         // Send frame to updater (i.e. lighthouse)
