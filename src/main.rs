@@ -9,6 +9,8 @@ use std::thread;
 mod constants;
 mod controller;
 mod doom;
+#[cfg(feature = "gui")]
+mod gui;
 mod message;
 mod updater;
 
@@ -50,6 +52,13 @@ async fn main() -> Result<()> {
         info!("Running DOOM...");
         doom.run();
     })?;
+
+    #[cfg(feature = "gui")]
+    {
+        // NOTE: The GUI must run on the main thread
+        info!("Running GUI...");
+        gui::run().unwrap();
+    }
 
     updater_handle.await??;
     controller_handle.await??;
