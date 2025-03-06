@@ -45,6 +45,9 @@ pub async fn run(
                     _ => None,
                 };
 
+                // TODO: Implement the release logic by tracking a set of
+                // pressed keys and checking which axis goes to zero exactly
+
                 macro_rules! flush_old_key {
                     () => {
                         if let Some(key) = last_gamepad_key.take() {
