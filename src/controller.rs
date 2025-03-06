@@ -1,6 +1,6 @@
 use anyhow::Result;
 use futures::{prelude::*, Stream};
-use lighthouse_client::protocol::{InputEvent, ServerMessage};
+use lighthouse_client::protocol::{InputEvent, KeyEvent, ServerMessage};
 use tokio::sync::mpsc;
 
 use crate::message::{ControllerMessage, Key};
@@ -12,9 +12,9 @@ pub async fn run(
     while let Some(msg) = stream.next().await {
         let input_event = msg?.payload;
         match input_event {
-            InputEvent::Key(key) => {
-                if let Some(key) = convert_key(&key.code) {
-                    tx.send(ControllerMessage::Key(key)).await?;
+            InputEvent::Key(KeyEvent { code, down, .. }) => {
+                if let Some(key) = convert_key(&code) {
+                    tx.send(ControllerMessage::Key { key, down }).await?;
                 }
             },
             // TODO: Add gamepad input
