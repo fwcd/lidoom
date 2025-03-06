@@ -1,3 +1,5 @@
+use std::process;
+
 use doomgeneric::{game::DoomGeneric, input::{keys::{self, KEY_DOWN, KEY_ENTER, KEY_ESCAPE, KEY_FIRE, KEY_LEFT, KEY_RIGHT, KEY_SPEED, KEY_STRAFELEFT, KEY_STRAFERIGHT, KEY_UP, KEY_USE}, KeyData}};
 use lighthouse_client::protocol::{Color, Frame, LIGHTHOUSE_COLS, LIGHTHOUSE_ROWS};
 use tokio::sync::mpsc;
@@ -55,7 +57,7 @@ impl DoomGeneric for LighthouseDoom {
                     screen_frame[rgb_idx + 2] = (pixel & 0xFF) as u8; // blue
                 }
             }
-            self.gui_tx.blocking_send(GUIMessage::Frame(screen_frame)).unwrap();
+            self.gui_tx.blocking_send(GUIMessage::Frame(screen_frame)).unwrap_or_else(|_| quit_upon_channel_close());
         }
 
         // Send frame to updater (i.e. lighthouse)
@@ -69,7 +71,7 @@ impl DoomGeneric for LighthouseDoom {
                 frame.set(j, i, color);
             }
         }
-        self.updater_tx.blocking_send(UpdaterMessage::Frame(frame)).unwrap();
+        self.updater_tx.blocking_send(UpdaterMessage::Frame(frame)).unwrap_or_else(|_| quit_upon_channel_close());
     }
 
     fn get_key(&mut self) -> Option<KeyData> {
@@ -87,8 +89,18 @@ impl DoomGeneric for LighthouseDoom {
     fn set_window_title(&mut self, title: &str) {
         info!("Window title: {title}");
         #[cfg(feature = "gui")]
-        self.gui_tx.blocking_send(GUIMessage::UpdateTitle(title.into())).unwrap();
+        self.gui_tx.blocking_send(GUIMessage::UpdateTitle(title.into())).unwrap_or_else(|_| quit_upon_channel_close());
     }
+}
+
+fn quit_upon_channel_close() {
+    // When one of the channels close, this means one of the other threads
+    // (Tokio or the GUI/main thread) have finished, indicating that the
+    // user wishes to quit the game. Since we cannot panic/unwind through
+    // C functions, we'll just exit the process from here to avoid a
+    // crash message.
+    info!("Quitting upong channel close...");
+    process::exit(0);
 }
 
 fn map_key(key: Key) -> Option<u8> {
