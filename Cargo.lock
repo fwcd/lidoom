@@ -357,7 +357,7 @@ dependencies = [
 [[package]]
 name = "doomgeneric"
 version = "0.3.0-beta.2"
-source = "git+https://github.com/fwcd/doomgeneric-rs.git?rev=545a6124a2690f03ac9200abb7b2afd404722696#545a6124a2690f03ac9200abb7b2afd404722696"
+source = "git+https://github.com/fwcd/doomgeneric-rs.git?rev=f45eed2e02ea280d12d345355e0c5341d30093a3#f45eed2e02ea280d12d345355e0c5341d30093a3"
 dependencies = [
  "cc",
  "once_cell",

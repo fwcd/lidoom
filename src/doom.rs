@@ -20,6 +20,10 @@ impl LighthouseDoom {
 
     pub fn run(self) {
         doomgeneric::game::init(self);
+
+        loop {
+            doomgeneric::game::tick();
+        }
     }
 }
 
