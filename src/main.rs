@@ -47,22 +47,24 @@ fn main() -> Result<()> {
         controller_rx,
     );
 
-    let tokio_handle = thread::Builder::new().name("Tokio".into()).spawn(move || {
-        let rt = Runtime::new().unwrap();
+    let tokio_handle = {
+        let controller_tx = controller_tx.clone();
+        thread::Builder::new().name("Tokio".into()).spawn(move || {
+            let rt = Runtime::new().unwrap();
+            rt.block_on(async move {
+                let lh = Lighthouse::connect_with_tokio_to(&args.url, auth).await.unwrap();
+                info!("Connected to the Lighthouse server");
 
-        rt.block_on(async move {
-            let lh = Lighthouse::connect_with_tokio_to(&args.url, auth).await.unwrap();
-            info!("Connected to the Lighthouse server");
+                let input = lh.stream_input().await.unwrap();
 
-            let input = lh.stream_input().await.unwrap();
+                let updater_handle = task::spawn(updater::run(lh, updater_rx));
+                let controller_handle = task::spawn(controller::run(input, controller_tx));
 
-            let updater_handle = task::spawn(updater::run(lh, updater_rx));
-            let controller_handle = task::spawn(controller::run(input, controller_tx));
-
-            updater_handle.await.unwrap().unwrap();
-            controller_handle.await.unwrap().unwrap();
-        });
-    })?;
+                updater_handle.await.unwrap().unwrap();
+                controller_handle.await.unwrap().unwrap();
+            });
+        })?
+    };
 
     let doom_handle = thread::Builder::new().name("DOOM".into()).spawn(move || {
         info!("Running DOOM...");
@@ -73,7 +75,7 @@ fn main() -> Result<()> {
     {
         // NOTE: The GUI must run on the main thread
         info!("Running GUI...");
-        gui::run(gui_rx).unwrap();
+        gui::run(gui_rx, controller_tx).unwrap();
     }
 
     tokio_handle.join().unwrap();

@@ -27,13 +27,15 @@ pub async fn run(
 
 fn convert_key(js_key: &str) -> Option<Key> {
     match js_key {
-        "ArrowLeft" => Some(Key::Left),
-        "ArrowRight" => Some(Key::Right),
-        "ArrowUp" => Some(Key::Up),
-        "ArrowDown" => Some(Key::Down),
+        "ArrowLeft" => Some(Key::ArrowLeft),
+        "ArrowRight" => Some(Key::ArrowRight),
+        "ArrowUp" => Some(Key::ArrowUp),
+        "ArrowDown" => Some(Key::ArrowDown),
         "Enter" => Some(Key::Enter),
         "Escape" => Some(Key::Escape),
-        "Shift" => Some(Key::Speed),
+        "Shift" => Some(Key::Shift),
+        "Space" => Some(Key::Space),
+        "Ctrl" => Some(Key::Ctrl),
         _ if js_key.starts_with("Digit") => Some(Key::Letter(js_key.as_bytes()[5] as char)),
         _ if js_key.starts_with("Key") => Some(Key::Letter(js_key.as_bytes()[3] as char)),
         _ => None,

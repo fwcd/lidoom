@@ -1,20 +1,17 @@
 use lighthouse_client::protocol::Frame;
 
-/// A key used by doom.
+/// A key on the keyboard.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Key {
-    Right,
-    Left,
-    Up,
-    Down,
-    StrafeLeft,
-    StrafeRight,
-    Fire,
-    Use,
-    Strafe,
-    Speed,
+    ArrowRight,
+    ArrowLeft,
+    ArrowUp,
+    ArrowDown,
     Escape,
     Enter,
+    Shift,
+    Space,
+    Ctrl,
     Letter(char),
 }
 
