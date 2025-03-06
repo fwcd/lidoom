@@ -35,7 +35,7 @@ impl DoomGeneric for LighthouseDoom {
         assert!(yres == DOOM_HEIGHT);
 
         // Send frame to GUI
-        let mut screen_frame = [0u8; 3 * DOOM_WIDTH * DOOM_HEIGHT];
+        let mut screen_frame = vec![0u8; 3 * DOOM_WIDTH * DOOM_HEIGHT];
         for y in 0..DOOM_HEIGHT {
             for x in 0..DOOM_WIDTH {
                 let pixel_idx = y * DOOM_WIDTH + x;
