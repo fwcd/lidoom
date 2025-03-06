@@ -39,10 +39,12 @@ impl DoomGeneric for LighthouseDoom {
     }
 
     fn get_key(&mut self) -> Option<KeyData> {
-        self.controller_tx.try_recv().ok().and_then(|message| match message {
+        self.controller_tx.blocking_recv().and_then(|message| match message {
             ControllerMessage::Key { key, down } => {
                 convert_key(key).map(|code| {
-                    KeyData { pressed: down, key: code }
+                    let key_data = KeyData { pressed: down, key: code };
+                    info!("{:?}", key_data);
+                    key_data
                 })
             }
         })
