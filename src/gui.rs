@@ -33,7 +33,14 @@ pub fn run(mut rx: mpsc::Receiver<GUIMessage>) -> Result<()> {
         if let Ok(message) = rx.try_recv() {
             match message {
                 GUIMessage::Frame(mut frame) => {
-                    let surface = Surface::from_data(&mut frame, DOOM_WIDTH as u32, DOOM_HEIGHT as u32, (DOOM_WIDTH * 3) as u32, PixelFormatEnum::RGB24).map_err(|e| anyhow!("{e}"))?;
+                    let surface = Surface::from_data(
+                        &mut frame,
+                        DOOM_WIDTH as u32,
+                        DOOM_HEIGHT as u32,
+                        (DOOM_WIDTH * 3) as u32,
+                        PixelFormatEnum::RGB24
+                    ).map_err(|e| anyhow!("{e}"))?;
+
                     let texture = Texture::from_surface(&surface, &texture_creator)?;
                     canvas.copy(&texture, None, None).map_err(|e| anyhow!("{e}"))?;
                     canvas.present();
