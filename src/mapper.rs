@@ -1,7 +1,8 @@
 use anyhow::Result;
+use lighthouse_client::protocol::Direction;
 use tokio::sync::mpsc;
 
-use crate::message::{Action, ControllerMessage, Key, MapperMessage};
+use crate::message::{Action, ControllerMessage, GamepadButton, Key, MapperMessage};
 
 pub async fn run(
     mut rx: mpsc::Receiver<ControllerMessage>,
@@ -11,7 +12,15 @@ pub async fn run(
         match message {
             ControllerMessage::Key { key, down } => {
                 tx.send(MapperMessage::Action { action: key_to_action(key), down }).await?;
-            }
+            },
+            ControllerMessage::GamepadButton { button, down } => {
+                if let Some(action) = gamepad_button_to_action(button) {
+                    tx.send(MapperMessage::Action { action, down }).await?;
+                }
+            },
+            ControllerMessage::GamepadStick { stick, value } => {
+                // TODO: Implement sticks
+            },
         }
     }
     Ok(())
@@ -33,5 +42,17 @@ fn key_to_action(key: Key) -> Action {
         Key::Escape => Action::Escape,
         Key::Enter => Action::Enter,
         Key::Letter(c) => Action::KeyLetter(c),
+    }
+}
+
+fn gamepad_button_to_action(button: GamepadButton) -> Option<Action> {
+    match button {
+        GamepadButton::DPad(dir) => Some(match dir {
+            Direction::Up => Action::Up,
+            Direction::Down => Action::Down,
+            Direction::Left => Action::StrafeLeft,
+            Direction::Right => Action::StrafeRight,
+        }),
+        _ => None,
     }
 }

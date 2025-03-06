@@ -1,16 +1,14 @@
 use anyhow::Result;
 use futures::{prelude::*, Stream};
-use lighthouse_client::protocol::{Direction, GamepadControlEvent, InputEvent, KeyEvent, ServerMessage};
+use lighthouse_client::protocol::{Direction, GamepadAxis2DEvent, GamepadButtonEvent, GamepadControlEvent, InputEvent, KeyEvent, ServerMessage};
 use tokio::sync::mpsc;
 
-use crate::message::{ControllerMessage, Key};
+use crate::message::{ControllerMessage, GamepadButton, GamepadStick, Key};
 
 pub async fn run(
     mut stream: impl Stream<Item = lighthouse_client::Result<ServerMessage<InputEvent>>> + Unpin,
     tx: mpsc::Sender<ControllerMessage>,
 ) -> Result<()> {
-    let mut last_gamepad_key: Option<Key> = None;
-
     while let Some(msg) = stream.next().await {
         let input_event = msg?.payload;
 
@@ -20,55 +18,19 @@ pub async fn run(
                     tx.send(ControllerMessage::Key { key, down }).await?;
                 }
             },
-            InputEvent::Gamepad(gamepad) => {
-                let opt_info = match gamepad.control {
-                    GamepadControlEvent::Button(button) => button.d_pad_direction().map(|dir| match dir {
-                        Direction::Up => Key::Letter('W'),
-                        Direction::Left => Key::Letter('A'),
-                        Direction::Down => Key::Letter('S'),
-                        Direction::Right => Key::Letter('D'),
-                    }).map(|key| (key, button.down, false)),
-                    GamepadControlEvent::Axis2D(axis2d) => axis2d.direction().and_then(|dir| match axis2d.index {
-                        0 => Some(match dir {
-                            Direction::Up => Key::Letter('W'),
-                            Direction::Left => Key::Letter('A'),
-                            Direction::Down => Key::Letter('S'),
-                            Direction::Right => Key::Letter('D'),
-                        }),
-                        1 => match dir {
-                            Direction::Left => Some(Key::ArrowLeft),
-                            Direction::Right => Some(Key::ArrowRight),
-                            _ => None,
-                        },
-                        _ => None,
-                    }).map(|key| (key, true, true)),
-                    _ => None,
-                };
-
-                // TODO: Refcount to handle hybrid key/gamepad input?
-
-                // TODO: Implement the release logic by tracking a set of
-                // pressed keys and checking which axis goes to zero exactly
-
-                macro_rules! flush_old_key {
-                    () => {
-                        if let Some(key) = last_gamepad_key.take() {
-                            tx.send(ControllerMessage::Key { key, down: false }).await?;
-                        }
-                    };
-                }
-
-                if let Some((key, down, store)) = opt_info {
-                    tx.send(ControllerMessage::Key { key, down }).await?;
-                    if store && Some(key) != last_gamepad_key {
-                        flush_old_key!();
-                        last_gamepad_key = Some(key);
+            InputEvent::Gamepad(gamepad) => match gamepad.control {
+                GamepadControlEvent::Button(GamepadButtonEvent { index, down, .. }) => {
+                    if let Some(button) = convert_gamepad_button(index) {
+                        tx.send(ControllerMessage::GamepadButton { button, down }).await?;
                     }
-                } else {
-                    flush_old_key!();
-                }
+                },
+                GamepadControlEvent::Axis2D(GamepadAxis2DEvent { index, value }) => {
+                    if let Some(stick) = convert_gamepad_axis2d(index) {
+                        tx.send(ControllerMessage::GamepadStick { stick, value }).await?;
+                    }
+                },
+                _ => {},
             },
-            // TODO: Add gamepad input
             _ => {},
         }
     }
@@ -93,5 +55,29 @@ fn convert_key(js_key: &str) -> Option<Key> {
         _ if js_key.starts_with("Key") => Some(Key::Letter(js_key.as_bytes()[3] as char)),
         _ => None,
         // TODO: Map more keys
+    }
+}
+
+fn convert_gamepad_button(button_idx: usize) -> Option<GamepadButton> {
+    // See https://www.w3.org/TR/gamepad/#dfn-standard-gamepad
+    match button_idx {
+        0 => Some(GamepadButton::Cluster(Direction::Down)),
+        1 => Some(GamepadButton::Cluster(Direction::Right)),
+        2 => Some(GamepadButton::Cluster(Direction::Left)),
+        3 => Some(GamepadButton::Cluster(Direction::Up)),
+        12 => Some(GamepadButton::DPad(Direction::Up)),
+        13 => Some(GamepadButton::DPad(Direction::Down)),
+        14 => Some(GamepadButton::DPad(Direction::Left)),
+        15 => Some(GamepadButton::DPad(Direction::Right)),
+        _ => None,
+    }
+}
+
+fn convert_gamepad_axis2d(axis2d_idx: usize) -> Option<GamepadStick> {
+    // See https://github.com/ProjectLighthouseCAU/nighthouse/blob/77db0a00d93bcc538f9ea6455005fc8a2f29b46c/src/common/protocol/input/new.ts#L60-L66
+    match axis2d_idx {
+        0 => Some(GamepadStick::Left),
+        1 => Some(GamepadStick::Right),
+        _ => None,
     }
 }

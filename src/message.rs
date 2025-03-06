@@ -1,4 +1,4 @@
-use lighthouse_client::protocol::Frame;
+use lighthouse_client::protocol::{Direction, Frame, Vec2};
 
 /// A key on the keyboard.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -13,6 +13,20 @@ pub enum Key {
     Space,
     Ctrl,
     Letter(char),
+}
+
+/// A button on the gamepad.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum GamepadButton {
+    DPad(Direction),
+    Cluster(Direction),
+}
+
+/// A stick on the gamepad.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum GamepadStick {
+    Left,
+    Right,
 }
 
 /// A game action to take. Usually this is what keys are mapped to.
@@ -32,10 +46,12 @@ pub enum Action {
     KeyLetter(char),
 }
 
-/// A message sent from controller -> mapper.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+/// A message sent from controller or gui -> mapper.
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum ControllerMessage {
     Key { key: Key, down: bool },
+    GamepadButton { button: GamepadButton, down: bool },
+    GamepadStick { stick: GamepadStick, value: Vec2<f64> },
 }
 
 /// A message sent from mapper -> doom.
