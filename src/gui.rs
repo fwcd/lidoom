@@ -1,5 +1,5 @@
 use anyhow::{anyhow, Result};
-use sdl2::{event::Event, keyboard::{Keycode, Mod}, pixels::PixelFormatEnum, render::Texture, surface::Surface};
+use sdl2::{event::Event, keyboard::Keycode, pixels::PixelFormatEnum, render::Texture, surface::Surface};
 use tokio::sync::mpsc;
 
 use crate::{constants::{DOOM_HEIGHT, DOOM_WIDTH}, message::{ControllerMessage, GUIMessage, Key}};
@@ -29,13 +29,13 @@ pub fn run(
         if let Some(event) = event_pump.poll_event() {
             match event {
                 Event::Quit { .. } => break 'running,
-                Event::KeyDown { keycode, keymod, .. } => {
-                    if let Some(key) = convert_key(keycode, keymod) {
+                Event::KeyDown { keycode, .. } => {
+                    if let Some(key) = convert_key(keycode) {
                         tx.blocking_send(ControllerMessage::Key { key, down: true })?;
                     }
                 },
-                Event::KeyUp { keycode, keymod, .. } => {
-                    if let Some(key) = convert_key(keycode, keymod) {
+                Event::KeyUp { keycode, .. } => {
+                    if let Some(key) = convert_key(keycode) {
                         tx.blocking_send(ControllerMessage::Key { key, down: false })?;
                     }
                 },
@@ -69,7 +69,7 @@ pub fn run(
     Ok(())
 }
 
-fn convert_key(sdl_key: Option<Keycode>, sdl_mod: Mod) -> Option<Key> {
+fn convert_key(sdl_key: Option<Keycode>) -> Option<Key> {
     match sdl_key {
         Some(Keycode::Left) => Some(Key::ArrowLeft),
         Some(Keycode::Right) => Some(Key::ArrowRight),
@@ -78,6 +78,10 @@ fn convert_key(sdl_key: Option<Keycode>, sdl_mod: Mod) -> Option<Key> {
         Some(Keycode::Escape) => Some(Key::Escape),
         Some(Keycode::Return) => Some(Key::Enter),
         Some(Keycode::Space) => Some(Key::Space),
+        Some(Keycode::LCtrl) => Some(Key::Ctrl),
+        Some(Keycode::RCtrl) => Some(Key::Ctrl),
+        Some(Keycode::LShift) => Some(Key::Shift),
+        Some(Keycode::RShift) => Some(Key::Shift),
         Some(Keycode::A) => Some(Key::Letter('A')),
         Some(Keycode::B) => Some(Key::Letter('B')),
         Some(Keycode::C) => Some(Key::Letter('C')),
@@ -104,15 +108,6 @@ fn convert_key(sdl_key: Option<Keycode>, sdl_mod: Mod) -> Option<Key> {
         Some(Keycode::X) => Some(Key::Letter('X')),
         Some(Keycode::Y) => Some(Key::Letter('Y')),
         Some(Keycode::Z) => Some(Key::Letter('Z')),
-        None => {
-            if sdl_mod.intersects(Mod::LCTRLMOD | Mod::RCTRLMOD) {
-                Some(Key::Ctrl)
-            } else if sdl_mod.intersects(Mod::LSHIFTMOD | Mod::RSHIFTMOD) {
-                Some(Key::Shift)
-            } else {
-                None
-            }
-        },
         _ => None,
     }
 }
