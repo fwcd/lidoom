@@ -3,7 +3,7 @@ use clap::Parser;
 use doom::LighthouseDoom;
 use lighthouse_client::{protocol::Authentication, Lighthouse, LIGHTHOUSE_URL};
 use tracing::info;
-use tokio::{sync::mpsc, task};
+use tokio::{runtime::Runtime, sync::mpsc, task};
 use std::thread;
 
 mod constants;
@@ -28,8 +28,7 @@ struct Args {
     url: String,
 }
 
-#[tokio::main(flavor = "current_thread")]
-async fn main() -> Result<()> {
+fn main() -> Result<()> {
     tracing_subscriber::fmt().init();
     _ = dotenvy::dotenv();
 
@@ -42,13 +41,23 @@ async fn main() -> Result<()> {
 
     let doom = LighthouseDoom::new(gui_tx, updater_tx, controller_rx);
 
-    let lh = Lighthouse::connect_with_tokio_to(&args.url, auth).await?;
-    info!("Connected to the Lighthouse server");
+    let tokio_handle = thread::Builder::new().name("Tokio".into()).spawn(move || {
+        let rt = Runtime::new().unwrap();
 
-    let input = lh.stream_input().await?;
+        rt.block_on(async move {
+            let lh = Lighthouse::connect_with_tokio_to(&args.url, auth).await.unwrap();
+            info!("Connected to the Lighthouse server");
 
-    let updater_handle = task::spawn(updater::run(lh, updater_rx));
-    let controller_handle = task::spawn(controller::run(input, controller_tx));
+            let input = lh.stream_input().await.unwrap();
+
+            let updater_handle = task::spawn(updater::run(lh, updater_rx));
+            let controller_handle = task::spawn(controller::run(input, controller_tx));
+
+            updater_handle.await.unwrap().unwrap();
+            controller_handle.await.unwrap().unwrap();
+        });
+    })?;
+
     let doom_handle = thread::Builder::new().name("DOOM".into()).spawn(move || {
         info!("Running DOOM...");
         doom.run();
@@ -61,8 +70,7 @@ async fn main() -> Result<()> {
         gui::run(gui_rx).unwrap();
     }
 
-    updater_handle.await??;
-    controller_handle.await??;
+    tokio_handle.join().unwrap();
     doom_handle.join().unwrap();
 
     Ok(())

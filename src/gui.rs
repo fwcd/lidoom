@@ -23,7 +23,7 @@ pub fn run(mut rx: mpsc::Receiver<GUIMessage>) -> Result<()> {
     let mut event_pump = sdl_context.event_pump().map_err(|e| anyhow!("{e}"))?;
 
     'running: loop {
-        for event in event_pump.poll_iter() {
+        if let Some(event) = event_pump.poll_event() {
             match event {
                 Event::Quit { .. } => break 'running,
                 _ => {},

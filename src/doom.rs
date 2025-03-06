@@ -46,6 +46,7 @@ impl DoomGeneric for LighthouseDoom {
                 screen_frame[rgb_idx + 2] = (pixel & 0xFF) as u8; // blue
             }
         }
+        println!("Sending frame");
         self.gui_tx.blocking_send(GUIMessage::Frame(screen_frame)).unwrap();
 
         // Send frame to updater (i.e. lighthouse)
