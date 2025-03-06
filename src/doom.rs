@@ -76,6 +76,7 @@ impl DoomGeneric for LighthouseDoom {
 
     fn set_window_title(&mut self, title: &str) {
         info!("Window title: {title}");
+        self.gui_tx.blocking_send(GUIMessage::UpdateTitle(title.into())).unwrap();
     }
 }
 
