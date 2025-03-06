@@ -51,3 +51,7 @@ cargo run
 ```
 
 > Optionally, use `--features gui` here too.
+
+## Input
+
+The game can take input both via the Lighthouse frontend (LUNA) and via the SDL GUI. When using the Lighthouse frontend, make sure to leave "Legacy Mode" unchecked.
