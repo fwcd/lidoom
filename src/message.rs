@@ -29,3 +29,10 @@ pub enum ControllerMessage {
 pub enum UpdaterMessage {
     Frame(Frame),
 }
+
+/// A message sent to the GUI.
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum GUIMessage {
+    Frame(Vec<u8>),
+    UpdateTitle(String),
+}
