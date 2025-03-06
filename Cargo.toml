@@ -13,7 +13,7 @@ gui = ["dep:sdl2"]
 [dependencies]
 anyhow = "1.0.97"
 clap = { version = "4.5.31", features = ["derive", "env"] }
-doomgeneric = { git = "https://github.com/fwcd/doomgeneric-rs.git", rev = "f45eed2e02ea280d12d345355e0c5341d30093a3" }
+doomgeneric = "0.3.0-beta.3"
 dotenvy = "0.15.7"
 futures = "0.3.31"
 lighthouse-client = "5.0.2"
