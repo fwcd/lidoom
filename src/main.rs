@@ -36,10 +36,11 @@ async fn main() -> Result<()> {
     let args = Args::parse();
     let auth = Authentication::new(&args.username, &args.token);
 
+    let (gui_tx, gui_rx) = mpsc::channel(8);
     let (updater_tx, updater_rx) = mpsc::channel(8);
     let (controller_tx, controller_rx) = mpsc::channel(8);
 
-    let doom = LighthouseDoom::new(updater_tx, controller_rx);
+    let doom = LighthouseDoom::new(gui_tx, updater_tx, controller_rx);
 
     let lh = Lighthouse::connect_with_tokio_to(&args.url, auth).await?;
     info!("Connected to the Lighthouse server");
@@ -57,7 +58,7 @@ async fn main() -> Result<()> {
     {
         // NOTE: The GUI must run on the main thread
         info!("Running GUI...");
-        gui::run().unwrap();
+        gui::run(gui_rx).unwrap();
     }
 
     updater_handle.await??;

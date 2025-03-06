@@ -1,5 +1,7 @@
 use lighthouse_client::protocol::Frame;
 
+use crate::constants::{DOOM_HEIGHT, DOOM_WIDTH};
+
 /// A key used by doom.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Key {
@@ -28,4 +30,11 @@ pub enum ControllerMessage {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum UpdaterMessage {
     Frame(Frame),
+}
+
+/// A message sent to the GUI.
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum GUIMessage {
+    Frame([u8; 3 * DOOM_WIDTH * DOOM_HEIGHT]),
+    UpdateTitle(String),
 }

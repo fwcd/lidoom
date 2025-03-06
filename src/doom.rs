@@ -3,19 +3,21 @@ use lighthouse_client::protocol::{Color, Frame, LIGHTHOUSE_COLS, LIGHTHOUSE_ROWS
 use tokio::sync::mpsc;
 use tracing::info;
 
-use crate::message::{ControllerMessage, Key, UpdaterMessage};
+use crate::{constants::{DOOM_HEIGHT, DOOM_WIDTH}, message::{ControllerMessage, GUIMessage, Key, UpdaterMessage}};
 
 pub struct LighthouseDoom {
+    gui_tx: mpsc::Sender<GUIMessage>,
     updater_tx: mpsc::Sender<UpdaterMessage>,
     controller_tx: mpsc::Receiver<ControllerMessage>,
 }
 
 impl LighthouseDoom {
     pub fn new(
+        gui_tx: mpsc::Sender<GUIMessage>,
         updater_tx: mpsc::Sender<UpdaterMessage>,
         controller_tx: mpsc::Receiver<ControllerMessage>,
     ) -> Self {
-        Self { updater_tx, controller_tx }
+        Self { gui_tx, updater_tx, controller_tx }
     }
 
     pub fn run(self) {
@@ -29,12 +31,30 @@ impl LighthouseDoom {
 
 impl DoomGeneric for LighthouseDoom {
     fn draw_frame(&mut self, screen_buffer: &[u32], xres: usize, yres: usize) {
+        assert!(xres == DOOM_WIDTH);
+        assert!(yres == DOOM_HEIGHT);
+
+        // Send frame to GUI
+        let mut screen_frame = [0u8; 3 * DOOM_WIDTH * DOOM_HEIGHT];
+        for y in 0..DOOM_HEIGHT {
+            for x in 0..DOOM_WIDTH {
+                let pixel_idx = y * DOOM_WIDTH + x;
+                let rgb_idx = 3 * pixel_idx;
+                let pixel = screen_buffer[pixel_idx];
+                screen_frame[rgb_idx] = ((pixel >> 16) & 0xFF) as u8; // red
+                screen_frame[rgb_idx + 1] = ((pixel >> 8) & 0xFF) as u8; // green
+                screen_frame[rgb_idx + 2] = (pixel & 0xFF) as u8; // blue
+            }
+        }
+        self.gui_tx.blocking_send(GUIMessage::Frame(screen_frame)).unwrap();
+
+        // Send frame to updater (i.e. lighthouse)
         let mut frame = Frame::empty();
         for i in 0..LIGHTHOUSE_ROWS {
             for j in 0..LIGHTHOUSE_COLS {
-                let y = (i * yres) / LIGHTHOUSE_ROWS;
-                let x = (j * xres) / LIGHTHOUSE_COLS;
-                let pixel = screen_buffer[y * xres + x];
+                let y = (i * DOOM_HEIGHT) / LIGHTHOUSE_ROWS;
+                let x = (j * DOOM_WIDTH) / LIGHTHOUSE_COLS;
+                let pixel = screen_buffer[y * DOOM_WIDTH + x];
                 let color = Color::new(((pixel >> 16) & 0xFF) as u8, ((pixel >> 8) & 0xFF) as u8, (pixel & 0xFF) as u8);
                 frame.set(j, i, color);
             }
