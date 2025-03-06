@@ -31,7 +31,6 @@ impl LighthouseDoom {
         doomgeneric::game::init(self);
 
         loop {
-            info!("Ticking");
             doomgeneric::game::tick();
         }
     }
@@ -41,8 +40,6 @@ impl DoomGeneric for LighthouseDoom {
     fn draw_frame(&mut self, screen_buffer: &[u32], xres: usize, yres: usize) {
         assert!(xres == DOOM_WIDTH);
         assert!(yres == DOOM_HEIGHT);
-
-        info!("Drawing frame");
 
         #[cfg(feature = "gui")]
         {
