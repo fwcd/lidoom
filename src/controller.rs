@@ -1,6 +1,6 @@
 use anyhow::Result;
 use futures::{prelude::*, Stream};
-use lighthouse_client::protocol::{Direction, InputEvent, KeyEvent, ServerMessage};
+use lighthouse_client::protocol::{Direction, GamepadControlEvent, InputEvent, KeyEvent, ServerMessage};
 use tokio::sync::mpsc;
 
 use crate::message::{ControllerMessage, Key};
@@ -21,27 +21,46 @@ pub async fn run(
                 }
             },
             InputEvent::Gamepad(gamepad) => {
-                let opt_key = if let Some(dir) = gamepad.left_direction() {
-                    Some(match dir {
+                let opt_info = match gamepad.control {
+                    GamepadControlEvent::Button(button) => button.d_pad_direction().map(|dir| match dir {
                         Direction::Up => Key::Letter('W'),
                         Direction::Left => Key::Letter('A'),
                         Direction::Down => Key::Letter('S'),
                         Direction::Right => Key::Letter('D'),
-                    })
-                } else if let Some(dir) = gamepad.right_direction() {
-                    match dir {
-                        Direction::Left => Some(Key::ArrowLeft),
-                        Direction::Right => Some(Key::ArrowRight),
+                    }).map(|key| (key, button.down, false)),
+                    GamepadControlEvent::Axis2D(axis2d) => axis2d.direction().and_then(|dir| match axis2d.index {
+                        0 => Some(match dir {
+                            Direction::Up => Key::Letter('W'),
+                            Direction::Left => Key::Letter('A'),
+                            Direction::Down => Key::Letter('S'),
+                            Direction::Right => Key::Letter('D'),
+                        }),
+                        1 => match dir {
+                            Direction::Left => Some(Key::ArrowLeft),
+                            Direction::Right => Some(Key::ArrowRight),
+                            _ => None,
+                        },
                         _ => None,
+                    }).map(|key| (key, true, true)),
+                    _ => None,
+                };
+
+                macro_rules! flush_old_key {
+                    () => {
+                        if let Some(key) = last_gamepad_key.take() {
+                            tx.send(ControllerMessage::Key { key, down: false }).await?;
+                        }
+                    };
+                }
+
+                if let Some((key, down, store)) = opt_info {
+                    tx.send(ControllerMessage::Key { key, down }).await?;
+                    if store && Some(key) != last_gamepad_key {
+                        flush_old_key!();
+                        last_gamepad_key = Some(key);
                     }
                 } else {
-                    None
-                };
-                if let Some(key) = opt_key {
-                    tx.send(ControllerMessage::Key { key, down: true }).await?;
-                    last_gamepad_key = Some(key);
-                } else if let Some(key) = last_gamepad_key.take() {
-                    tx.send(ControllerMessage::Key { key, down: false }).await?;
+                    flush_old_key!();
                 }
             },
             // TODO: Add gamepad input
