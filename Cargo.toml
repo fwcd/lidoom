@@ -7,4 +7,12 @@ license = "GPL-2.0"
 repository = "https://github.com/fwcd/lidoom"
 
 [dependencies]
+anyhow = "1.0.97"
+clap = { version = "4.5.31", features = ["derive", "env"] }
 doomgeneric = { git = "https://github.com/fwcd/doomgeneric-rs.git", rev = "545a6124a2690f03ac9200abb7b2afd404722696" }
+dotenvy = "0.15.7"
+futures = "0.3.31"
+lighthouse-client = "5.0.2"
+tokio = { version = "1.43.0", features = ["rt", "macros", "time", "sync"] }
+tracing = "0.1.41"
+tracing-subscriber = { version = "0.3.19", features = ["env-filter", "std"] }
