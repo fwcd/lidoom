@@ -35,11 +35,17 @@ fn main() -> Result<()> {
     let args = Args::parse();
     let auth = Authentication::new(&args.username, &args.token);
 
+    #[cfg(feature = "gui")]
     let (gui_tx, gui_rx) = mpsc::channel(8);
     let (updater_tx, updater_rx) = mpsc::channel(8);
     let (controller_tx, controller_rx) = mpsc::channel(8);
 
-    let doom = LighthouseDoom::new(gui_tx, updater_tx, controller_rx);
+    let doom = LighthouseDoom::new(
+        #[cfg(feature = "gui")]
+        gui_tx,
+        updater_tx,
+        controller_rx,
+    );
 
     let tokio_handle = thread::Builder::new().name("Tokio".into()).spawn(move || {
         let rt = Runtime::new().unwrap();
