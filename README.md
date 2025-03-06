@@ -25,6 +25,14 @@ Then build the project with the `gui` flag:
 cargo build --features gui
 ```
 
+> [!TIP]
+> If you are developing with rust-analyzer in VSCode, add the following to your `.vscode/settings.json` to enable language support in the GUI module:
+> ```json
+> {
+>   "rust-analyzer.cargo.features": ["gui"]
+> }
+> ```
+
 ## Running
 
 Make sure to have the following environment variables set or in a `.env` file in the working directory:
