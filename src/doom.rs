@@ -32,7 +32,7 @@ impl DoomGeneric for LighthouseDoom {
                 let x = (j * xres) / LIGHTHOUSE_COLS;
                 let pixel = screen_buffer[y * xres + x];
                 let color = Color::new(((pixel >> 16) & 0xFF) as u8, ((pixel >> 8) & 0xFF) as u8, (pixel & 0xFF) as u8);
-                frame.set(x, y, color);
+                frame.set(j, i, color);
             }
         }
         self.updater_tx.blocking_send(UpdaterMessage::Frame(frame)).unwrap();
