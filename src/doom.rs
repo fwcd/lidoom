@@ -106,6 +106,6 @@ fn map_key(key: Key) -> Option<u8> {
         Key::Shift => Some(*KEY_SPEED),
         Key::Escape => Some(KEY_ESCAPE),
         Key::Enter => Some(KEY_ENTER),
-        Key::Letter(c) => keys::from_char(c),
+        Key::Letter(c) => keys::from_char(c.to_ascii_lowercase()), // TODO: Is this correct?
     }
 }
