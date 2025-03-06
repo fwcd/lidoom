@@ -11,6 +11,7 @@ mod controller;
 mod doom;
 #[cfg(feature = "gui")]
 mod gui;
+mod mapper;
 mod message;
 mod updater;
 
@@ -38,13 +39,14 @@ fn main() -> Result<()> {
     #[cfg(feature = "gui")]
     let (gui_tx, gui_rx) = mpsc::channel(8);
     let (updater_tx, updater_rx) = mpsc::channel(8);
+    let (mapper_tx, mapper_rx) = mpsc::channel(8);
     let (controller_tx, controller_rx) = mpsc::channel(8);
 
     let doom = LighthouseDoom::new(
         #[cfg(feature = "gui")]
         gui_tx,
         updater_tx,
-        controller_rx,
+        mapper_rx,
     );
 
     let tokio_handle = {
@@ -58,9 +60,11 @@ fn main() -> Result<()> {
                 let input = lh.stream_input().await.unwrap();
 
                 let updater_handle = task::spawn(updater::run(lh, updater_rx));
+                let mapper_handle = task::spawn(mapper::run(controller_rx, mapper_tx));
                 let controller_handle = task::spawn(controller::run(input, controller_tx));
 
                 updater_handle.await.unwrap().unwrap();
+                mapper_handle.await.unwrap().unwrap();
                 controller_handle.await.unwrap().unwrap();
             });
         })?

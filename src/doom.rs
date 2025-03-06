@@ -5,13 +5,13 @@ use lighthouse_client::protocol::{Color, Frame, LIGHTHOUSE_COLS, LIGHTHOUSE_ROWS
 use tokio::sync::mpsc;
 use tracing::info;
 
-use crate::{constants::{DOOM_HEIGHT, DOOM_WIDTH}, message::{ControllerMessage, GUIMessage, Key, UpdaterMessage}};
+use crate::{constants::{DOOM_HEIGHT, DOOM_WIDTH}, message::{Action, GUIMessage, MapperMessage, UpdaterMessage}};
 
 pub struct LighthouseDoom {
     #[cfg(feature = "gui")]
     gui_tx: mpsc::Sender<GUIMessage>,
     updater_tx: mpsc::Sender<UpdaterMessage>,
-    controller_tx: mpsc::Receiver<ControllerMessage>,
+    mapper_tx: mpsc::Receiver<MapperMessage>,
 }
 
 impl LighthouseDoom {
@@ -19,13 +19,13 @@ impl LighthouseDoom {
         #[cfg(feature = "gui")]
         gui_tx: mpsc::Sender<GUIMessage>,
         updater_tx: mpsc::Sender<UpdaterMessage>,
-        controller_tx: mpsc::Receiver<ControllerMessage>,
+        mapper_tx: mpsc::Receiver<MapperMessage>,
     ) -> Self {
         Self {
             #[cfg(feature = "gui")]
             gui_tx,
             updater_tx,
-            controller_tx
+            mapper_tx
         }
     }
 
@@ -75,9 +75,9 @@ impl DoomGeneric for LighthouseDoom {
     }
 
     fn get_key(&mut self) -> Option<KeyData> {
-        self.controller_tx.try_recv().ok().and_then(|message| match message {
-            ControllerMessage::Key { key, down } => {
-                map_key(key).map(|code| {
+        self.mapper_tx.try_recv().ok().and_then(|message| match message {
+            MapperMessage::Action { action, down } => {
+                convert_action(action).map(|code| {
                     let key_data = KeyData { pressed: down, key: code };
                     info!("{:?}", key_data);
                     key_data
@@ -103,21 +103,19 @@ fn quit_upon_channel_close() {
     process::exit(0);
 }
 
-fn map_key(key: Key) -> Option<u8> {
-    match key {
-        Key::ArrowRight => Some(*KEY_RIGHT),
-        Key::ArrowLeft => Some(*KEY_LEFT),
-        Key::ArrowUp => Some(*KEY_UP),
-        Key::ArrowDown => Some(*KEY_DOWN),
-        Key::Letter('W') => Some(*KEY_UP),
-        Key::Letter('S') => Some(*KEY_DOWN),
-        Key::Letter('A') => Some(*KEY_STRAFELEFT),
-        Key::Letter('D') => Some(*KEY_STRAFERIGHT),
-        Key::Ctrl => Some(*KEY_USE),
-        Key::Space => Some(*KEY_FIRE),
-        Key::Shift => Some(*KEY_SPEED),
-        Key::Escape => Some(KEY_ESCAPE),
-        Key::Enter => Some(KEY_ENTER),
-        Key::Letter(c) => keys::from_char(c.to_ascii_lowercase()), // TODO: Is this correct?
+fn convert_action(action: Action) -> Option<u8> {
+    match action {
+        Action::Right => Some(*KEY_RIGHT),
+        Action::Left => Some(*KEY_LEFT),
+        Action::Up => Some(*KEY_UP),
+        Action::Down => Some(*KEY_DOWN),
+        Action::StrafeLeft => Some(*KEY_STRAFELEFT),
+        Action::StrafeRight => Some(*KEY_STRAFERIGHT),
+        Action::Use => Some(*KEY_USE),
+        Action::Fire => Some(*KEY_FIRE),
+        Action::Speed => Some(*KEY_SPEED),
+        Action::Escape => Some(KEY_ESCAPE),
+        Action::Enter => Some(KEY_ENTER),
+        Action::KeyLetter(c) => keys::from_char(c.to_ascii_lowercase()), // TODO: Is this correct?
     }
 }
