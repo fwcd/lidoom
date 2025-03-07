@@ -4,7 +4,7 @@ use anyhow::Result;
 use lighthouse_client::protocol::Direction;
 use tokio::sync::mpsc;
 
-use crate::message::{Action, ControllerMessage, GamepadButton, GamepadStick, Key, MapperMessage};
+use crate::message::{Action, ControllerMessage, GamepadButton, GamepadStick, GamepadTrigger, Key, MapperMessage};
 
 pub async fn run(
     mut rx: mpsc::Receiver<ControllerMessage>,
@@ -77,7 +77,16 @@ fn key_to_action(key: Key) -> Action {
 fn gamepad_button_to_action(button: GamepadButton) -> Option<Action> {
     match button {
         GamepadButton::DPad(dir) => Some(movement_dir_to_action(dir)),
-        _ => None,
+        GamepadButton::Cluster(dir) => match dir {
+            Direction::Left => Some(Action::Speed),
+            Direction::Down => Some(Action::Enter),
+            Direction::Right => Some(Action::Use),
+            _ => None,
+        },
+        GamepadButton::Trigger(trigger) => match trigger {
+            GamepadTrigger::Right => Some(Action::Fire),
+            _ => None,
+        },
     }
 }
 

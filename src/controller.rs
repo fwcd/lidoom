@@ -3,7 +3,7 @@ use futures::{prelude::*, Stream};
 use lighthouse_client::protocol::{Direction, GamepadAxis2DEvent, GamepadButtonEvent, GamepadControlEvent, InputEvent, KeyEvent, ServerMessage};
 use tokio::sync::mpsc;
 
-use crate::message::{ControllerMessage, GamepadButton, GamepadStick, Key};
+use crate::message::{ControllerMessage, GamepadButton, GamepadStick, GamepadTrigger, Key};
 
 pub async fn run(
     mut stream: impl Stream<Item = lighthouse_client::Result<ServerMessage<InputEvent>>> + Unpin,
@@ -65,10 +65,13 @@ fn convert_gamepad_button(button_idx: usize) -> Option<GamepadButton> {
         1 => Some(GamepadButton::Cluster(Direction::Right)),
         2 => Some(GamepadButton::Cluster(Direction::Left)),
         3 => Some(GamepadButton::Cluster(Direction::Up)),
+        6 => Some(GamepadButton::Trigger(GamepadTrigger::Left)),
+        7 => Some(GamepadButton::Trigger(GamepadTrigger::Right)),
         12 => Some(GamepadButton::DPad(Direction::Up)),
         13 => Some(GamepadButton::DPad(Direction::Down)),
         14 => Some(GamepadButton::DPad(Direction::Left)),
         15 => Some(GamepadButton::DPad(Direction::Right)),
+
         _ => None,
     }
 }

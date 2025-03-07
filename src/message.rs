@@ -15,11 +15,19 @@ pub enum Key {
     Letter(char),
 }
 
+/// A trigger on the gamepad.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum GamepadTrigger {
+    Left,
+    Right,
+}
+
 /// A button on the gamepad.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum GamepadButton {
     DPad(Direction),
     Cluster(Direction),
+    Trigger(GamepadTrigger),
 }
 
 /// A stick on the gamepad.
