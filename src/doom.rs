@@ -5,7 +5,9 @@ use lighthouse_client::protocol::{Color, Frame, LIGHTHOUSE_COLS, LIGHTHOUSE_ROWS
 use tokio::sync::mpsc;
 use tracing::info;
 
-use crate::{constants::{DOOM_HEIGHT, DOOM_WIDTH}, message::{Action, GUIMessage, MapperMessage, UpdaterMessage}};
+#[cfg(feature = "gui")]
+use crate::message::GUIMessage;
+use crate::{constants::{DOOM_HEIGHT, DOOM_WIDTH}, message::{Action, MapperMessage, UpdaterMessage}};
 
 pub struct LighthouseDoom {
     #[cfg(feature = "gui")]

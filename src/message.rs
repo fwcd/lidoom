@@ -2,6 +2,7 @@ use lighthouse_client::protocol::{Direction, Frame, Vec2};
 
 /// A key on the keyboard.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[allow(dead_code)]
 pub enum Key {
     ArrowRight,
     ArrowLeft,
@@ -77,6 +78,7 @@ pub enum UpdaterMessage {
 
 /// A message sent from updater -> gui.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[allow(dead_code)]
 pub enum GUIMessage {
     Frame(Vec<u8>),
     UpdateTitle(String),
