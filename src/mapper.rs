@@ -30,7 +30,6 @@ pub async fn run(
                         pop_active_movement!();
                     } else {
                         let opt_dir = Direction::approximate_from(movement);
-                        dbg!(movement, opt_dir);
                         let opt_action = opt_dir.and_then(camera_dir_to_action);
                         if let Some(action) = opt_action {
                             tx.send(MapperMessage::Action { action, down: true }).await?;
