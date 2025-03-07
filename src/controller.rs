@@ -1,6 +1,6 @@
 use anyhow::Result;
 use futures::{prelude::*, Stream};
-use lighthouse_client::protocol::{Direction, GamepadAxis2DEvent, GamepadButtonEvent, GamepadControlEvent, InputEvent, KeyEvent, ServerMessage};
+use lighthouse_client::protocol::{Direction, GamepadAxis2DEvent, GamepadButtonEvent, GamepadControlEvent, InputEvent, KeyEvent, MouseEvent, ServerMessage};
 use tokio::sync::mpsc;
 
 use crate::message::{ControllerMessage, GamepadButton, GamepadStick, GamepadTrigger, Key};
@@ -9,10 +9,18 @@ pub async fn run(
     mut stream: impl Stream<Item = lighthouse_client::Result<ServerMessage<InputEvent>>> + Unpin,
     tx: mpsc::Sender<ControllerMessage>,
 ) -> Result<()> {
+    let mut was_down = false;
+
     while let Some(msg) = stream.next().await {
         let input_event = msg?.payload;
 
         match input_event {
+            InputEvent::Mouse(MouseEvent { movement, down, pointer_locked, .. }) => {
+                if pointer_locked || down || was_down {
+                    tx.send(ControllerMessage::Mouse { movement, down }).await?;
+                }
+                was_down = down;
+            },
             InputEvent::Key(KeyEvent { code, down, .. }) => {
                 if let Some(key) = convert_key(&code) {
                     tx.send(ControllerMessage::Key { key, down }).await?;
@@ -31,7 +39,6 @@ pub async fn run(
                 },
                 _ => {},
             },
-            _ => {},
         }
     }
 

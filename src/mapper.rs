@@ -11,9 +11,16 @@ pub async fn run(
     tx: mpsc::Sender<MapperMessage>,
 ) -> Result<()> {
     let mut active_stick_action: HashMap<GamepadStick, Action> = HashMap::new();
+    let mut was_down = false;
 
     while let Some(message) = rx.recv().await {
         match message {
+            ControllerMessage::Mouse { movement, down } => {
+                if down || was_down {
+                    tx.send(MapperMessage::Action { action: Action::Fire, down }).await?;
+                }
+                was_down = down;
+            },
             ControllerMessage::Key { key, down } => {
                 tx.send(MapperMessage::Action { action: key_to_action(key), down }).await?;
             },
