@@ -1,8 +1,11 @@
+use std::cell::Cell;
+
 use anyhow::{anyhow, Result};
-use sdl2::{event::Event, keyboard::Keycode, pixels::PixelFormatEnum, render::Texture, surface::Surface};
+use lighthouse_client::protocol::{Delta, Pos, LIGHTHOUSE_COLS, LIGHTHOUSE_ROWS};
+use sdl2::{event::Event, keyboard::Keycode, mouse::MouseButton as SDLMouseButton, pixels::PixelFormatEnum, render::Texture, surface::Surface};
 use tokio::sync::mpsc;
 
-use crate::{constants::{DOOM_HEIGHT, DOOM_WIDTH}, message::{ControllerMessage, GUIMessage, Key}};
+use crate::{constants::{DOOM_HEIGHT, DOOM_WIDTH}, message::{ControllerMessage, GUIMessage, Key, MouseButton}};
 
 pub fn run(
     mut rx: mpsc::Receiver<GUIMessage>,
@@ -24,11 +27,40 @@ pub fn run(
     let texture_creator = canvas.texture_creator();
 
     let mut event_pump = sdl_context.event_pump().map_err(|e| anyhow!("{e}"))?;
+    let mut last_pos: Option<Pos<f64>> = None;
+
+    // TODO: Implement pointer lock
+    let pointer_locked = false;
+    let mouse_down: Cell<bool> = Cell::new(false);
+
+    let mut handle_mouse_event = |sdl_button: Option<SDLMouseButton>, x: i32, y: i32| {
+        let pos = Pos::new(
+            x as f64 / DOOM_WIDTH as f64 * LIGHTHOUSE_COLS as f64,
+            y as f64 / DOOM_HEIGHT as f64 * LIGHTHOUSE_ROWS as f64,
+        );
+        let movement: Delta<f64> = pos - last_pos.unwrap_or(pos);
+        last_pos = Some(pos);
+        if let Some(button) = sdl_button.and_then(convert_mouse_button) {
+            tx.blocking_send(ControllerMessage::Mouse { button, movement, down: mouse_down.get(), pointer_locked })?;
+        }
+        anyhow::Ok(())
+    };
 
     'running: loop {
         if let Some(event) = event_pump.poll_event() {
             match event {
                 Event::Quit { .. } => break 'running,
+                Event::MouseButtonDown { mouse_btn, x, y, .. } => {
+                    mouse_down.set(true);
+                    handle_mouse_event(Some(mouse_btn), x, y)?;
+                },
+                Event::MouseButtonUp { mouse_btn, x, y, .. } => {
+                    mouse_down.set(false);
+                    handle_mouse_event(Some(mouse_btn), x, y)?;
+                },
+                Event::MouseMotion { x, y, .. } => {
+                    handle_mouse_event(None, x, y)?;
+                },
                 Event::KeyDown { keycode, .. } => {
                     if let Some(key) = convert_key(keycode) {
                         tx.blocking_send(ControllerMessage::Key { key, down: true })?;
@@ -67,6 +99,15 @@ pub fn run(
     }
 
     Ok(())
+}
+
+fn convert_mouse_button(sdl_button: SDLMouseButton) -> Option<MouseButton> {
+    match sdl_button {
+        SDLMouseButton::Left => Some(MouseButton::Left),
+        SDLMouseButton::Middle => Some(MouseButton::Middle),
+        SDLMouseButton::Right => Some(MouseButton::Right),
+        _ => None,
+    }
 }
 
 fn convert_key(sdl_key: Option<Keycode>) -> Option<Key> {
