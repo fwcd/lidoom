@@ -1,25 +1,29 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use anyhow::Result;
 use lighthouse_client::protocol::Direction;
 use tokio::sync::mpsc;
 
-use crate::message::{Action, ControllerMessage, GamepadButton, GamepadStick, GamepadTrigger, Key, MapperMessage};
+use crate::message::{Action, ControllerMessage, GamepadButton, GamepadStick, GamepadTrigger, Key, MapperMessage, MouseButton};
 
 pub async fn run(
     mut rx: mpsc::Receiver<ControllerMessage>,
     tx: mpsc::Sender<MapperMessage>,
 ) -> Result<()> {
     let mut active_stick_action: HashMap<GamepadStick, Action> = HashMap::new();
-    let mut was_down = false;
+    let mut active_mouse_buttons: HashSet<MouseButton> = HashSet::new();
 
     while let Some(message) = rx.recv().await {
         match message {
-            ControllerMessage::Mouse { movement, down } => {
-                if down || was_down {
+            ControllerMessage::Mouse { button, down, .. } => {
+                if down || active_mouse_buttons.contains(&button) {
                     tx.send(MapperMessage::Action { action: Action::Fire, down }).await?;
                 }
-                was_down = down;
+                if down {
+                    active_mouse_buttons.insert(button);
+                } else {
+                    active_mouse_buttons.remove(&button);
+                }
             },
             ControllerMessage::Key { key, down } => {
                 tx.send(MapperMessage::Action { action: key_to_action(key), down }).await?;

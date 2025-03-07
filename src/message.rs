@@ -1,5 +1,13 @@
 use lighthouse_client::protocol::{Delta, Direction, Frame, Vec2};
 
+/// A button on the mouse.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum MouseButton {
+    Left,
+    Middle,
+    Right,
+}
+
 /// A key on the keyboard.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[allow(dead_code)]
@@ -59,7 +67,7 @@ pub enum Action {
 /// A message sent from controller or gui -> mapper.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum ControllerMessage {
-    Mouse { movement: Delta<f64>, down: bool },
+    Mouse { button: MouseButton, movement: Delta<f64>, down: bool, pointer_locked: bool },
     Key { key: Key, down: bool },
     GamepadButton { button: GamepadButton, down: bool },
     GamepadStick { stick: GamepadStick, value: Vec2<f64> },
