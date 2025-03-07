@@ -12,10 +12,35 @@ pub async fn run(
 ) -> Result<()> {
     let mut active_stick_action: HashMap<GamepadStick, Action> = HashMap::new();
     let mut active_mouse_buttons: HashSet<MouseButton> = HashSet::new();
+    let mut active_mouse_movement: Option<Action> = None;
 
     while let Some(message) = rx.recv().await {
         match message {
-            ControllerMessage::Mouse { button, down, .. } => {
+            ControllerMessage::Mouse { movement, button, down, pointer_locked } => {
+                macro_rules! pop_active_movement {
+                    () => {
+                        if let Some(action) = active_mouse_movement.take() {
+                            tx.send(MapperMessage::Action { action, down: false }).await?;
+                        }
+                    };
+                }
+                if pointer_locked {
+                    let in_deadzone = movement.x.abs() < 0.05;
+                    if in_deadzone {
+                        pop_active_movement!();
+                    } else {
+                        let opt_dir = Direction::approximate_from(movement);
+                        dbg!(movement, opt_dir);
+                        let opt_action = opt_dir.and_then(camera_dir_to_action);
+                        if let Some(action) = opt_action {
+                            tx.send(MapperMessage::Action { action, down: true }).await?;
+                            if Some(action) != active_mouse_movement {
+                                pop_active_movement!();
+                                active_mouse_movement = Some(action);
+                            }
+                        }
+                    }
+                }
                 if down || active_mouse_buttons.contains(&button) {
                     tx.send(MapperMessage::Action { action: Action::Fire, down }).await?;
                 }
