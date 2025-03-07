@@ -56,6 +56,29 @@ cargo run
 
 The game can take input both via the Lighthouse frontend (LUNA) and via the SDL GUI. When using the Lighthouse frontend, make sure to leave "Legacy Mode" unchecked.
 
+### Controls
+
+The controls are mapped in a relatively standard fashion, applying the modern conventions for FPS-style games:
+
+- **Mouse:**
+  - Movement controls camera (though only if pointer is locked, which can be done by clicking the window to lock and pressing escape to unlock)
+  - Left button fires
+- **Keyboard:**
+  - WASD controls movement
+  - Arrow keys control camera
+  - Shift enables sprint
+  - Space fires
+  - Ctrl uses an item
+- **Gamepad:**
+  - Left stick/d-pad control movement
+  - Right stick controls camera
+  - Menu button opens the escape menu
+  - Cluster left button (Xbox: "X", PS: Square) enables sprint
+  - Cluster bottom button (Xbox: "A", PS: Cross) presses enter
+  - Cluster right button (Xbox: "B", PS: Circle) uses an item
+
+All of these mappings are implemented in [`mapper.rs`](src/mapper.rs).
+
 ## Architecture
 
 Internally, lidoom uses a number of threads and virtual threads (Tokio tasks) to communicate. This architecture allows for robust bridging between blocking contexts (e.g. the SDL GUI on the main thread or DOOM, which runs on its own thread) and Tokio's async tasks (for the communication with the lighthouse server). Graphically, the architecture can be visualized as follows:
