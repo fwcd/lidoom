@@ -1,6 +1,6 @@
 [package]
 name = "lidoom"
-version = "1.1.0"
+version = "1.1.1"
 description = "DOOM port for Project Lighthouse"
 edition = "2021"
 license = "GPL-2.0"
