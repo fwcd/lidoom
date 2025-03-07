@@ -77,6 +77,7 @@ fn key_to_action(key: Key) -> Action {
 fn gamepad_button_to_action(button: GamepadButton) -> Option<Action> {
     match button {
         GamepadButton::DPad(dir) => Some(movement_dir_to_action(dir)),
+        GamepadButton::Menu => Some(Action::Escape),
         GamepadButton::Cluster(dir) => match dir {
             Direction::Left => Some(Action::Speed),
             Direction::Down => Some(Action::Enter),

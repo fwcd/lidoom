@@ -26,6 +26,7 @@ pub enum GamepadTrigger {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum GamepadButton {
     DPad(Direction),
+    Menu,
     Cluster(Direction),
     Trigger(GamepadTrigger),
 }

@@ -67,6 +67,7 @@ fn convert_gamepad_button(button_idx: usize) -> Option<GamepadButton> {
         3 => Some(GamepadButton::Cluster(Direction::Up)),
         6 => Some(GamepadButton::Trigger(GamepadTrigger::Left)),
         7 => Some(GamepadButton::Trigger(GamepadTrigger::Right)),
+        9 => Some(GamepadButton::Menu),
         12 => Some(GamepadButton::DPad(Direction::Up)),
         13 => Some(GamepadButton::DPad(Direction::Down)),
         14 => Some(GamepadButton::DPad(Direction::Left)),
