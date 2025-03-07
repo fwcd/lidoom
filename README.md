@@ -55,3 +55,32 @@ cargo run
 ## Input
 
 The game can take input both via the Lighthouse frontend (LUNA) and via the SDL GUI. When using the Lighthouse frontend, make sure to leave "Legacy Mode" unchecked.
+
+## Architecture
+
+Internally, lidoom uses a number of threads and virtual threads (Tokio tasks) to communicate. This architecture allows for robust bridging between blocking contexts (e.g. the SDL GUI on the main thread or DOOM, which runs on its own thread) and Tokio's async tasks (for the communication with the lighthouse server). Graphically, the architecture can be visualized as follows:
+
+```mermaid
+flowchart LR
+  Lighthouse[Lighthouse server]
+  subgraph lidoom
+    subgraph Tokio threads
+      Controller
+      Mapper
+      Updater
+    end
+    subgraph DOOM thread
+      DOOM
+    end
+    subgraph Main thread
+      GUI
+    end
+    Controller -- ControllerMessage --> Mapper
+    GUI -- ControllerMessage --> Mapper
+    Mapper -- MapperMessage --> DOOM
+    DOOM -- UpdaterMessage --> Updater
+    DOOM -- GUIMessage --> GUI
+  end
+  Lighthouse --> Controller
+  Updater --> Lighthouse
+```
