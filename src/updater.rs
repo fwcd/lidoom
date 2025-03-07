@@ -7,7 +7,7 @@ use crate::message::UpdaterMessage;
 
 pub async fn run(lh: Lighthouse<TokioWebSocket>, mut rx: mpsc::Receiver<UpdaterMessage>) -> Result<()> {
     while let Some(UpdaterMessage::Frame(frame)) = rx.recv().await {
-        // Send the rendered snake to the lighthouse
+        // Send the rendered frame to the lighthouse
         lh.put_model(frame).await?;
         debug!("Sent frame");
     }
