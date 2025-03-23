@@ -839,9 +839,9 @@ dependencies = [
 
 [[package]]
 name = "lighthouse-client"
-version = "5.1.0"
+version = "6.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8b8f80b963cfaa9286a91cb6bdb09b4eeabafc8fec028b2789d8565a37ef94d3"
+checksum = "2460cc8c05f14de4cb51ac89727cd6d67409890b003351a60f2424e9868e4037"
 dependencies = [
  "async-tungstenite",
  "futures",
@@ -858,13 +858,14 @@ dependencies = [
 
 [[package]]
 name = "lighthouse-protocol"
-version = "5.1.0"
+version = "6.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3c5e7b5425a480372a5268b94f3548bc1340cca16efe3d2250ef425366f2cf3f"
+checksum = "e6b4d37ce93287cee1ffd2964c1ef8b8b8e7a964a6c298f464bffce51f964f5a"
 dependencies = [
  "rand",
  "rmpv",
  "serde",
+ "serde_bytes",
  "serde_with",
 ]
 
@@ -1316,9 +1317,9 @@ dependencies = [
 
 [[package]]
 name = "serde_bytes"
-version = "0.11.16"
+version = "0.11.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "364fec0df39c49a083c9a8a18a23a6bcfd9af130fe9fe321d18520a0d113e09e"
+checksum = "8437fd221bde2d4ca316d61b90e337e9e702b3820b87d63caa9ba6c02bd06d96"
 dependencies = [
  "serde",
 ]
